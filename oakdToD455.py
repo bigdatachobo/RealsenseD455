@@ -3,8 +3,8 @@ import numpy as np
 import pyrealsense2 as rs
 
 # 설정하려는 거리 (미터 단위)
-min_depth = 0.3  # 최소 깊이 (m)
-max_depth = 1.0  # 최대 깊이 (m)
+min_depth = 1.0  # 최소 깊이 (m)
+max_depth = 7.0  # 최대 깊이 (m)
 
 # 카메라 파이프 라인 설정
 pipeline = rs.pipeline()

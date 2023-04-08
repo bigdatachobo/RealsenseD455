@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>QR Code Detection</title>
+  </head>
+  <body>
+    <style>
+      .qr-code__bounding-box {
+        position: absolute;
+        border: 2px solid #f00;
+      }
+    </style>
+    <div class="container">
+      <h1>QR Code Detection</h1>
+      <div class="video-container">
+        <video id="video" width="640" height="480" autoplay></video>
+        <canvas id="canvas" width="640" height="480"></canvas>
+    </div>
+    {% for qr in qr_codes %}
+    <div class="qr-code">
+    <div class="qr-code__text">{{ qr.data }}</div>
+    <div class="qr-code__bounding-box"
+         style="left: {{ qr.rect.left }}px; top: {{ qr.rect.top }}px; width: {{ qr.rect.width }}px; height: {{ qr.rect.height }}px;"></div>
+    </div>
+    {% endfor %}
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(function() {
+        var video = document.getElementById('video');
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        var qr_codes = [];
+
+        navigator.mediaDevices.getUserMedia({video: true})
+        .then(function(stream) {
+          video.srcObject = stream;
+        });
+
+        video.addEventListener('play', function() {
+          setInterval(function() {
+            context.drawImage(video, 0, 0, 640, 480);
+            qr_codes = detectQRCode(canvas);
+            drawQRCodeBoundingBox(qr_codes);
+          }, 1000 / 30);
+        });
+
+        function detectQRCode(canvas) {
+          var image_data = canvas.toDataURL('image/jpeg');
+          return new Promise(function(resolve, reject) {
+            $.ajax({
+              url: '/detect_qr_code',
+              type: 'POST',
+              data: JSON.stringify({'image_data': image_data}),
+              contentType: 'application/json',
+              success: function(data) {
+                qr_codes = JSON.parse(data);
+                resolve(qr_codes);
+              }
+            });
+          });
+        }
+
+        function drawQRCodeBoundingBox(qr_codes) {
+          $('.qr-code').remove();
+          for (var i = 0; i < qr_codes.length; i++) {
+            var qr_code = qr_codes[i];
+            var bounding_box = $('<div/>', {
+              'class': 'qr-code__bounding-box',
+              'css': {
+                'left': qr_code.rect.left + 'px',
+                'top': qr_code.rect.top + 'px',
+                'width': qr_code.rect.width + 'px',
+                'height': qr_code.rect.height + 'px'
+              }
+            });
+            var qr_code_text = $('<div/>', {
+              'class': 'qr-code__text',
+              'text': qr_code.data
+            });
+            var qr_code_element = $('<div/>', {
+              'class': 'qr-code'
+            }).append(bounding_box).append(qr_code_text);
+            $('.qr-codes').append(qr_code_element);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
