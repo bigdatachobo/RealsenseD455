@@ -54,6 +54,8 @@ try:
         # Draw bounding boxes and text on the frame
         draw_qr_codes(frame, qr_codes)
 
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
         # Show the frame
         cv2.imshow("QR Code Detection", frame)
 
